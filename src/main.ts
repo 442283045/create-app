@@ -200,15 +200,7 @@ function emptyDir(dir: string) {
     fs.rmSync(path.resolve(dir, file), { recursive: true, force: true })
   }
 }
-function pkgFromUserAgent(userAgent: string | undefined) {
-  if (!userAgent) return undefined
-  const pkgSpec = userAgent.split(' ')[0]
-  const pkgSpecArr = pkgSpec.split('/')
-  return {
-    name: pkgSpecArr[0],
-    version: pkgSpecArr[1]
-  }
-}
+
 function copy(src: string, dest: string) {
   const stat = fs.statSync(src)
   if (stat.isDirectory()) {
