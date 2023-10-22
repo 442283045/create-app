@@ -1,25 +1,11 @@
-/* eslint-env node */
-require('@rushstack/eslint-patch/modern-module-resolution')
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
 
-module.exports = {
-  root: true,
-  'extends': [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting'
-  ],
-  overrides: [
-    {
-      files: [
-        'cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}'
-      ],
-      'extends': [
-        'plugin:cypress/recommended'
-      ]
+export default antfu(
+  {},
+  {
+    rules: {
+      'style/comma-dangle': ['error', 'never']
     }
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest'
   }
-}
+)
