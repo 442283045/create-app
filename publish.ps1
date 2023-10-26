@@ -1,3 +1,5 @@
+# build project
+npm run build
 # Set the npm registry to https://registry.npmjs.org/
 npm config set registry https://registry.npmjs.org/
 
