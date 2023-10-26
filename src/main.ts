@@ -3,8 +3,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import ora from 'ora'
 // import spawn from 'cross-spawn'
-import { cyan, green, red, reset } from 'kolorist'
+import { blue, cyan, green, red, reset } from 'kolorist'
+import { spawn } from 'node:child_process'
 import prompts from 'prompts'
 type ColorFunc = (str: string | number) => string
 type Framework = {
@@ -22,6 +24,11 @@ const FRAMEWORKS: Framework[] = [
     name: 'react',
     display: 'React',
     color: cyan
+  },
+  {
+    name: 'typescript',
+    display: 'TypeScript',
+    color: blue
   }
 ]
 const TEMPLATES = FRAMEWORKS.map((f) => [f.name]).reduce(
@@ -32,6 +39,11 @@ const argv = minimist<{ t?: string; template?: string }>(
   process.argv.slice(2),
   { string: ['_'] }
 )
+
+/**
+ * delete the trailing '/' in the target directory string
+ * @param targetDir
+ */
 function formatTargetDir(targetDir: string | undefined) {
   return targetDir?.trim().replace(/\/+$/g, '')
 }
@@ -39,16 +51,17 @@ const cwd = process.cwd()
 const renameFiles: Record<string, string | undefined> = {
   _gitignore: '.gitignore'
 }
-const defaultTargetDir = 'new-project'
+const defaultTargetDir = 'app'
 async function init() {
   const argTargetDir = formatTargetDir(argv._[0])
   const argTemplate = argv.template || argv.t
 
   let targetDir = argTargetDir || defaultTargetDir
+
   const getProjectName = () =>
     targetDir === '.' ? path.basename(path.resolve()) : targetDir
   let result: prompts.Answers<
-    'projectName' | 'overwrite' | 'packageName' | 'framework'
+    'projectName' | 'overwrite' | 'packageName' | 'framework' | 'execute'
   >
 
   try {
@@ -60,6 +73,7 @@ async function init() {
           message: reset('Project name:'),
           initial: defaultTargetDir,
           onState: (state) => {
+            console.log(state)
             targetDir = formatTargetDir(state.value) || defaultTargetDir
           }
         },
@@ -108,6 +122,12 @@ async function init() {
               value: framework
             }
           })
+        },
+        {
+          type: 'toggle',
+          name: 'execute',
+          initial: false,
+          message: 'Do you want to execute pnpm install'
         }
       ],
       {
@@ -122,7 +142,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName } = result
+  const { framework, overwrite, packageName, execute } = result
 
   const root = path.join(cwd, targetDir)
   if (overwrite) {
@@ -140,7 +160,6 @@ async function init() {
     '../..',
     `templates/${template}`
   )
-  console.log(templateDir)
   const write = (file: string, content?: string) => {
     const targetPath = path.join(root, renameFiles[file] ?? file)
     if (content) {
@@ -160,15 +179,46 @@ async function init() {
   pkg.name = packageName || getProjectName()
   write('package.json', JSON.stringify(pkg, null, 2) + '\n')
   const cdProjectName = path.relative(cwd, root)
-  console.log('\nDone. Now run:\n')
-  if (root !== cwd) {
-    console.log(`
+
+  if (execute) {
+    const install = spawn(
+      /^win/.test(process.platform) ? 'pnpm.cmd' : 'pnpm',
+      ['install'],
+      {
+        cwd: path.join(cwd, targetDir)
+      }
+    )
+    const spinner = ora()
+    spinner.start('installing...')
+    install.stdout.setEncoding('utf-8')
+
+    install.on('error', (error) => {
+      console.log(error)
+      console.log(red('installation failed') + ', please install it manually')
+    })
+    install.on('close', () => {
+      spinner.succeed('installation success')
+      console.log('\nDone. Now run:')
+      if (root !== cwd) {
+        console.log(`
     cd ${cdProjectName.includes(' ') ? `"${cdProjectName}"` : cdProjectName}
-    `)
+        `)
+      }
+      console.log(`    pnpm run dev`)
+      console.log()
+      // console.log(green('installation success'))
+    })
+  } else {
+    console.log('\nDone. Now run:\n')
+    if (root !== cwd) {
+      console.log(`
+      cd ${cdProjectName.includes(' ') ? `"${cdProjectName}"` : cdProjectName}
+      `)
+    }
+    console.log(`    pnpm install`)
+    console.log(`    pnpm run dev`)
+    console.log()
   }
-  console.log(`pnpm install`)
-  console.log(`pnpm run dev`)
-  console.log()
 }
 
 init()

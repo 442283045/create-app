@@ -1,0 +1,10 @@
+{
+
+  "type": "module",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "1.0.0-beta.28",
+    "eslint": "^8.52.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "eslint.experimental.useFlatConfig": true,
+  "cSpell.words": [
+    "antfu"
+  ],
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml"
+  ]
+}
