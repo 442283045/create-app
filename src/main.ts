@@ -1,12 +1,11 @@
+import { blue, cyan, green, red, reset } from 'kolorist'
 import minimist from 'minimist'
+import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import ora from 'ora'
-// import spawn from 'cross-spawn'
-import { blue, cyan, green, red, reset } from 'kolorist'
-import { spawn } from 'node:child_process'
 import prompts from 'prompts'
 type ColorFunc = (str: string | number) => string
 type Framework = {
@@ -51,7 +50,7 @@ const cwd = process.cwd()
 const renameFiles: Record<string, string | undefined> = {
   _gitignore: '.gitignore'
 }
-const defaultTargetDir = 'app'
+const defaultTargetDir = 'my-app'
 async function init() {
   const argTargetDir = formatTargetDir(argv._[0])
   const argTemplate = argv.template || argv.t
@@ -73,7 +72,6 @@ async function init() {
           message: reset('Project name:'),
           initial: defaultTargetDir,
           onState: (state) => {
-            console.log(state)
             targetDir = formatTargetDir(state.value) || defaultTargetDir
           }
         },
@@ -124,7 +122,7 @@ async function init() {
           })
         },
         {
-          type: 'toggle',
+          type: 'confirm',
           name: 'execute',
           initial: false,
           message: 'Do you want to execute pnpm install'
@@ -140,7 +138,7 @@ async function init() {
     console.log(cancelled.message)
     return
   }
-
+  
   // user choice associated with prompts
   const { framework, overwrite, packageName, execute } = result
 
@@ -170,7 +168,7 @@ async function init() {
   }
 
   const files = fs.readdirSync(templateDir)
-  for (const file of files.filter((f) => f !== 'package.json')) {
+  for (const file of files.filter((f) => f !== 'package.json' && f !== 'node_modules')) {
     write(file)
   }
   const pkg = JSON.parse(
@@ -253,6 +251,8 @@ function emptyDir(dir: string) {
 
 function copy(src: string, dest: string) {
   const stat = fs.statSync(src)
+ 
+  
   if (stat.isDirectory()) {
     copyDir(src, dest)
   } else {
