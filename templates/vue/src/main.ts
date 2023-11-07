@@ -4,7 +4,16 @@ import { createApp } from 'vue'
 import './assets/main.css'
 
 import App from './App.vue'
-import router from './router'
+import { createRouter, createWebHistory } from 'vue-router'
+
+import { routes as generatedRoutes } from 'vue-router/auto/routes'
+
+import { setupLayouts } from 'virtual:generated-layouts'
+
+const router = createRouter({
+  routes: setupLayouts(generatedRoutes),
+  history: createWebHistory()
+})
 
 const app = createApp(App)
 
